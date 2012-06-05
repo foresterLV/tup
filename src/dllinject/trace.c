@@ -21,6 +21,7 @@
 #include "trace.h"
 #include <stdio.h>
 #include <stdarg.h>
+#include <windows.h>
 
 
 const char* access_type_name[] = {
@@ -36,20 +37,25 @@ int opening = 0;
 
 void debug_hook(const char* format, ...)
 {
-	char buf[256];
-	va_list ap;
-	if(debugf == NULL && !opening) {
-		opening = 1;
-		debugf = fopen("c:\\Users\\forester\\ok.txt", "a");
-		fflush(stdout);
-	}
-	if(debugf == NULL) {
-		printf("No file :(\n");
-		return;
-	}
-	va_start(ap, format);
-	vsnprintf(buf, 255, format, ap);
-	buf[255] = '\0';
-	fprintf(debugf, buf);
-	fflush(debugf);
+    DWORD save_error = GetLastError();
+
+    char buf[256];
+    va_list ap;
+    if(debugf == NULL && !opening) {
+        opening = 1;
+        debugf = fopen("c:\\cygwin\\home\\marf\\ok.txt", "a");
+        fflush(stdout);
+    }
+    if(debugf == NULL) {
+        printf("No file :(\n");
+        goto exit;
+    }
+    va_start(ap, format);
+    vsnprintf(buf, 255, format, ap);
+    buf[255] = '\0';
+    fprintf(debugf, buf);
+    fflush(debugf);
+
+exit:;
+    SetLastError( save_error );
 }

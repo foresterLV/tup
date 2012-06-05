@@ -1586,6 +1586,8 @@ static int canon_path(const char *file, char *dest)
 
 static void mhandle_file(const char* file, const char* file2, enum access_type at, int line)
 {
+	DWORD save_error = GetLastError();
+
 	char buf[ACCESS_EVENT_MAX_SIZE];
 	struct access_event* e = (struct access_event*) buf;
 	char* dest = (char*) (e + 1);
@@ -1593,7 +1595,7 @@ static void mhandle_file(const char* file, const char* file2, enum access_type a
 	if(line) {}
 
 	if (ignore_file(file) || ignore_file(file2) || deph == INVALID_HANDLE_VALUE)
-		return;
+		goto exit;
 
 	e->at = at;
 
@@ -1611,10 +1613,15 @@ static void mhandle_file(const char* file, const char* file2, enum access_type a
 	ret = writef((char*) e, dest - (char*) e);
 	DEBUG_HOOK("writef %d\n", ret);
 	if(ret) {}
+
+exit:;
+	SetLastError( save_error );
 }
 
 static void handle_file_w(const wchar_t* file, const wchar_t* file2, enum access_type at)
 {
+	DWORD save_error = GetLastError();
+
 	char buf[ACCESS_EVENT_MAX_SIZE];
 	char afile[PATH_MAX];
 	char afile2[PATH_MAX];
@@ -1626,7 +1633,7 @@ static void handle_file_w(const wchar_t* file, const wchar_t* file2, enum access
 	int count;
 
 	if (ignore_file_w(file) || ignore_file_w(file2) || deph == INVALID_HANDLE_VALUE)
-		return;
+		goto exit;
 
 	e->at = at;
 
@@ -1647,6 +1654,9 @@ static void handle_file_w(const wchar_t* file, const wchar_t* file2, enum access
 	ret = writef((char*) e, dest - (char*) e);
 	DEBUG_HOOK("writef [wide] %d\n", ret);
 	if(ret) {}
+
+exit:;
+	SetLastError( save_error );
 }
 
 static int open_file(const char *depfilename)
